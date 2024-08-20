@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconhecimento de Gestos com as Mãos</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Webcam.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.25/webcam.min.js"></script>
+
+    <!-- ml5.js -->
+    <script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
+</head>
+<body>
+    <!-- Cabeçalho -->
+    <header class="bg-primary text-white text-center py-3">
+        <h1>Aplicativo de Reconhecimento de Gestos com as Mãos 👋</h1>
+    </header>
+
+    <div class="container mt-4">
+        <!-- Lista de Ícones de Gestos -->
+        <div class="mb-4 text-center">
+            <h5>Gestos de Mão Suportados</h5>
+            <p>👍 (U+1F44D), ✌️ (U+270C), 🤙 (U+1F919)</p>
+        </div>
+
+        <!-- Visualização da Webcam -->
+        <div id="webcam" class="d-flex justify-content-center mb-4">
+            <!-- O feed da webcam será exibido aqui -->
+        </div>
+
+        <!-- Botão para Capturar Imagem -->
+        <div class="text-center mb-4">
+            <button class="btn btn-success" onclick="captureImage()">Capturar Imagem</button>
+        </div>
+
+        <!-- Exibição do Nome do Gesto -->
+        <div class="text-center mb-4">
+            <span id="gesture-name" class="h4">Nome do Gesto</span>
+        </div>
+
+        <!-- Exibição do Ícone do Gesto -->
+        <div class="text-center mb-4">
+            <span id="gesture-icon" class="h4">🤔</span> <!-- Ícone padrão -->
+        </div>
+
+        <!-- Exibição da Imagem Capturada -->
+        <div id="captured-image" class="d-flex justify-content-center mb-4">
+            <!-- A imagem capturada será exibida aqui -->
+        </div>
+
+        <!-- Botão para Identificar o Gesto -->
+        <div class="text-center">
+            <button class="btn btn-primary" onclick="identifyGesture()">Identificar Gesto</button>
+        </div>
+    </div>
+
+    <!-- Arquivo JavaScript Principal -->
+    <script src="main.js"></script>
+
+    <script>
+        // Configurar webcam
+        Webcam.set({
+            width: 320,
+            height: 240,
+            image_format: 'jpeg',
+            jpeg_quality: 90
+        });
+        Webcam.attach('#webcam');
+
+        // Carregar modelo ml5
+        const modelUrl = 'https://teachablemachine.withgoogle.com/models/z3Bf589Xi/model.json';
+        let classifier;
+
+        ml5.imageClassifier(modelUrl)
+            .then(model => {
+                classifier = model;
+                console.log('Modelo carregado:', classifier);
+            })
+            .catch(error => console.error('Erro ao carregar o modelo:', error));
+
+        // Função para capturar a imagem
+        function captureImage() {
+            Webcam.snap(function(data_uri) {
+                document.getElementById('captured-image').innerHTML = 
+                    '<img src="'+data_uri+'" class="img-fluid"/>';
+                check(); // Chamar a função para comparar a imagem capturada
+            });
+        }
+
+        // Função para comparar a imagem capturada usando o modelo
+        function check() {
+            const imgElement = document.querySelector('#captured-image img');
+            if (imgElement && classifier) {
+                classifier.classify(imgElement, gotResult);
+            }
+        }
+
+        // Função que lida com o resultado da classificação
+        function gotResult(error, results) {
+            if (error) {
+                console.error('Erro:', error);
+                return;
+            }
+
+            const gestureName = results[0].label;
+            const confidence = results[0].confidence.toFixed(2) * 100; // Confiança em porcentagem
+
+            // Atualiza o nome do gesto e o ícone
+            document.getElementById('gesture-name').innerText = `${gestureName} (${confidence}%)`;
+            const gestureIcon = getGestureIcon(gestureName);
+            document.getElementById('gesture-icon').innerText = gestureIcon;
+
+            // Verifica o gesto e fala o significado
+            if (gestureName === 'legal') {
+                speak('Gesto de legal');
+            } else if (gestureName === 'vitória') {
+                speak('Gesto de vitória');
+            } else if (gestureName === 'tranquilo') {
+                speak('Gesto de tranquilidade');
+            } else {
+                speak('Gesto desconhecido.');
+            }
+        }
+
+        // Função para obter o ícone do gesto baseado no nome
+        function getGestureIcon(gestureName) {
+            const icons = {
+                'legal': '👍',
+                'vitória': '✌️',
+                'tranquilo': '🤙'
+            };
+            return icons[gestureName] || '🤔';
+        }
+
+        // Função para falar o significado do gesto
+        function speak(message) {
+            const synth = window.speechSynthesis;
+            const utterThis = new SpeechSynthesisUtterance(message);
+            synth.speak(utterThis);
+        }
+
+        // Console a versão ml5.js
+        console.log('Versão ml5.js:', ml5.version);
+    </script>
+</body>
+</html>

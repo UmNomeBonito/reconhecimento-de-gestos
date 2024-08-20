@@ -1,0 +1,31 @@
+body {
+    background-color: #a10a17;
+}
+
+header {
+    background-color: #ff5100;
+}
+
+h1 {
+    font-size: 2.5rem;
+}
+
+#webcam {
+    border: 2px solid #fffb00;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#gesture-name, #gesture-icon {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+#captured-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 2px solid #204b03;
+}
